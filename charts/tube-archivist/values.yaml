@@ -85,20 +85,54 @@ controllers:
           repository: bbilly1/tubearchivist
           pullPolicy: IfNotPresent
           tag: v0.3.6 # keep in sync!
-
-        # -- HOST_UID: your UID, if you want TubeArchivist to create files with your UID. Remove if you are OK with files being owned by the the container user.
-        # -- HOST_GID: as above but GID.
-        # -- TA_HOST: change it to the address of the machine you're running this on. This can be an IP address or a domain name.
-        # -- TA_PASSWORD: pick a password to use when logging in.
-        # -- ELASTIC_PASSWORD: pick a password for the elastic service. You won't need to type this yourself.
-        # -- TZ: your time zone. If you don't know yours, you can look it up [[here]](https://www.timezoneconverter.com/cgi-bin/findzone/findzone).
         env:
+          # -- TZ: your time zone. If you don't know yours, you can look it up [[here]](https://www.timezoneconverter.com/cgi-bin/findzone/findzone).
+          # your UID, if you want TubeArchivist to create files with your UID. Remove if you are OK with files being owned by the the container user.
+          HOST_UID: 1000
+          # above but GID.
+          HOST_GID: 1000
+          # change it to the address of the machine you're running this on. 
+          # This can be an IP address or a domain name.
           TA_HOST: "localhost"
-          TA_PASSWORD: "changeme"
           TA_USERNAME: "admin"
           ES_URL: "http://tubearchivist-elasticsearch:9200"
-          REDIS_HOST: "tubearchivist-redis-master"
-          ELASTIC_PASSWORD: "changeme"
+          REDIS_HOST: "tubearchivist-redis"
+        envFrom:
+          # -- ELASTIC_PASSWORD: pick a password for the elastic service. You won't need to type this yourself.
+          - secretRef:
+              name: elasticsearch # for ELASTIC_PASSWORD
+          # -- TA_PASSWORD: pick a password to use when logging in.
+          - secretRef:
+              name: tubearchivist
+  elasticsearch:
+    strategy: Recreate
+    containers:
+      main:
+        enabled: true
+        image:
+          repository: bbilly1/tubearchivist-es
+          pullPolicy: IfNotPresent
+          tag: 8.18.2
+        envFrom:
+          - secretRef:
+              name: elasticsearch
+        env:
+          ES_JAVA_OPTS: -Xms1g -Xmx1g
+          xpack.security.enabled: true
+          discovery.type: single-node
+          path.repo: /usr/share/elasticsearch/data/snapshot
+        #expose:
+        #  - "9200"
+  redis:
+    strategy: Recreate
+    containers:
+      main:
+        enabled: true
+        image:
+          repository: redis
+          pullPolicy: IfNotPresent
+          tag: 8.4.0
+
 
 # -- Configure persistence for the chart here.
 # Additional items can be added by adding a dictionary key similar to the 'config' key.
@@ -135,6 +169,17 @@ persistence:
     # @default -- See below
     mountPath: /cache
 
+  es-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ""
+    size: 1Gi
+    accessMode: ReadWriteOnce
+    advancedMounts:
+      elasticsearch:
+        main:
+          - path: /usr/share/elasticsearch/data 
+
 route: {}
 # -- Configure the services for the chart here.
 # Additional services can be added by adding a dictionary key similar to the 'main' service.
@@ -143,6 +188,7 @@ service:
   main:
     # -- Enables or disables the service
     enabled: true
+    controller: main
 
     # -- Make this the primary service (used in probes, notes, etc...).
     # If there is more than 1 service, make sure that only 1 service is marked as primary.
@@ -200,6 +246,20 @@ service:
 
         # -- Allow adding additional match labels
         extraSelectorLabels: {}
+  redis:
+    enable: true
+    controller: redis
+    ports:
+      redis:
+        port: 6379
+        targetPort: 6379
+  elasticsearch:
+    enable: true
+    controller: elasticsearch
+    ports:
+      es:
+        port: 9200
+        targetPort: 9200
 
 # -- Configure the ingresses for the chart here.
 # Additional ingresses can be added by adding a dictionary key similar to the 'main' ingress.
