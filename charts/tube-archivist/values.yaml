@@ -84,7 +84,7 @@ controllers:
         image:
           repository: bbilly1/tubearchivist
           pullPolicy: IfNotPresent
-          tag: v0.3.6 # keep in sync!
+          tag: v0.5.8 # keep in sync!
         env:
           # -- TZ: your time zone. If you don't know yours, you can look it up [[here]](https://www.timezoneconverter.com/cgi-bin/findzone/findzone).
           # your UID, if you want TubeArchivist to create files with your UID. Remove if you are OK with files being owned by the the container user.
@@ -96,7 +96,7 @@ controllers:
           TA_HOST: "localhost"
           TA_USERNAME: "admin"
           ES_URL: "http://tubearchivist-elasticsearch:9200"
-          REDIS_HOST: "tubearchivist-redis"
+          REDIS_CON: "redis://tubearchivist-redis:6379"
         envFrom:
           # -- ELASTIC_PASSWORD: pick a password for the elastic service. You won't need to type this yourself.
           - secretRef:
@@ -299,7 +299,7 @@ ingress:
             pathType: Prefix
             service:
               # -- Overrides the service name reference for this path
-              name: tube-archivist
+              name: tubearchivist-main
               # -- Overrides the service port reference for this path
               port: 8000
 
