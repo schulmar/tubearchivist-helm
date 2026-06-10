@@ -84,7 +84,7 @@ controllers:
         image:
           repository: bbilly1/tubearchivist
           pullPolicy: IfNotPresent
-          tag: v0.5.9 # keep in sync!
+          tag: v0.5.10 # keep in sync!
         env:
           # -- TZ: your time zone. If you don't know yours, you can look it up [[here]](https://www.timezoneconverter.com/cgi-bin/findzone/findzone).
           # your UID, if you want TubeArchivist to create files with your UID. Remove if you are OK with files being owned by the the container user.
