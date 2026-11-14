@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: v0.5.12
+appVersion: v0.6.0
 dependencies:
   - name: common
     version: 4.6.2
@@ -7,4 +7,4 @@ dependencies:
 description: A Helm chart for Kubernetes
 name: tubearchivist
 type: application
-version: 0.9.4
+version: 0.10.0
